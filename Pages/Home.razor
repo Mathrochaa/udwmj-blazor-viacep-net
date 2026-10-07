@@ -1,0 +1,65 @@
+﻿@page "/"
+@using BlazorViaCep.Models
+@inject HttpClient Http
+
+<PageTitle>Consume API</PageTitle>
+
+<h2>Consumer API</h2>
+
+<div class="mb-3">
+    <label for ="cepInput" class="form-label">Digite o CEP:</label>
+    <input type="text" id="cepInput" class="form-control" @bind="cep" />
+</div>
+<button class="btn btn-primary" @onclick="ConsultarCep">Consultar</button>
+ 
+@if(endereco != null)
+{
+    <div class="mt-3">
+        <h4>Endereço Encontrado:</h4>
+        <p><strong>CEP:</strong> @endereco.Cep</p>
+        <p><strong>Logradouro:</strong> @endereco.Logradouro</p>
+        <p><strong>Complemento:</strong> @endereco.Complemento</p>
+        <p><strong>Bairro:</strong> @endereco.Bairro</p>
+        <p><strong>Localidade:</strong> @endereco.Localidade</p>
+        <p><strong>UF:</strong> @endereco.Uf</p>
+    </div>
+}
+
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="mt-3 alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    private string cep;
+    private Endereco endereco;
+    private string errorMessage;
+
+    private async Task ConsultarCep()
+    {
+        errorMessage = null;
+        endereco = null;
+
+        if (string.IsNullOrWhiteSpace(cep))
+        {
+            errorMessage = "Por favor, insira um CEP válido.";
+            return;
+        }
+
+        try
+        {
+            var url = $"https://viacep.com.br/ws/{cep}/json/";
+            endereco = await Http.GetFromJsonAsync<Endereco>(url);
+
+            if (endereco == null || endereco.Cep == null)
+            {
+                errorMessage = "CEP não encontrado.";
+            }
+        }
+
+        catch (Exception ex)
+        {
+            errorMessage = $"Ocorreu um erro ao consultar o CEP: {ex.Message}";
+        }
+    }
+}
